@@ -1,4 +1,4 @@
-module github.com/ramr/go-reaper
+module github.com/ninedraft/go-reaper
 
 go 1.24.0
 

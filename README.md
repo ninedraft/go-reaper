@@ -1,6 +1,8 @@
 
 # go-reaper
 
+Forked from <github.com/ramr/go-reaper>
+
 Process (grim) reaper library for golang - this is useful for cleaning up
 zombie processes inside docker containers (which do not have an init
 process running as pid 1).
@@ -8,7 +10,7 @@ process running as pid 1).
 ## tl;dr
 
 ```go
-import reaper "github.com/ramr/go-reaper"
+import reaper "github.com/ninedraft/go-reaper"
 
 func main() {
         //  Start background reaping of orphaned child processes.
@@ -19,7 +21,7 @@ func main() {
         //  Note: If you also manage processes within your code aka
         //        exec commands or include some code that does do that,
         //        please refer to the section titled
-        //        "[Into The Woods]"(https://github.com/ramr/go-reaper#into-the-woods)
+        //        "[Into The Woods]"(https://github.com/ninedraft/go-reaper#into-the-woods)
 }
 
 ```
@@ -49,7 +51,7 @@ reaper, enable subreaper functionality and optionally get notified when
 child processes are reaped.
 
 ```go
-import reaper "github.com/ramr/go-reaper"
+import reaper "github.com/ninedraft/go-reaper"
 
 func main() {
         config := reaper.Config{
@@ -106,7 +108,7 @@ inside a different process ...
 
 ```go
 import (
-        reaper "github.com/ramr/go-reaper"
+        reaper "github.com/ninedraft/go-reaper"
 )
 
 func main() {
@@ -128,7 +130,7 @@ a callback function (really just syntactic sugar around `RunForked`).
 
 ```go
 import (
-        reaper "github.com/ramr/go-reaper"
+        reaper "github.com/ninedraft/go-reaper"
 )
 
 func main() {
