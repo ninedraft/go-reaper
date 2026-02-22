@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	reaper "github.com/ramr/go-reaper"
+	reaper "github.com/ninedraft/go-reaper"
 )
 
 const SCRIPT_THREADS_NUM = 3

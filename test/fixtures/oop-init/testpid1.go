@@ -1,16 +1,18 @@
 package main
 
-import "encoding/json"
-import "fmt"
-import "os"
-import "os/signal"
-import "os/exec"
-import "io/ioutil"
-import "path/filepath"
-import "syscall"
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+	"time"
 
-import reaper "github.com/ramr/go-reaper"
+	reaper "github.com/ninedraft/go-reaper"
+)
 
 const SCRIPT_THREADS_NUM = 10
 const REAPER_JSON_CONFIG = "/reaper/config/reaper.json"
