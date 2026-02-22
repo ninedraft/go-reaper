@@ -4,6 +4,7 @@ package reaper
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"regexp"
@@ -103,15 +104,14 @@ func notify(ch chan Status, pid int, err error, ws syscall.WaitStatus) {
 			return
 		}
 
-		fmt.Printf(" - Recovering from notify panic: %v\n", r)
-		fmt.Printf(" - Lost pid %v status: %+v\n", pid, status)
+		slog.Error("recovering from notify panic", "panic", r)
+		slog.Error("lost child status after notify panic", "pid", pid, "status", status)
 	}()
 
 	select {
 	case ch <- status: /*  Notified with the child status.  */
 	default: /*  blocked ... channel full or no reader!  */
-		fmt.Printf(" - Status channel full, lost pid %v: %+v\n",
-			pid, status)
+		slog.Error("status channel full, dropping child status", "pid", pid, "status", status)
 	}
 
 } /*  End of function  notify.  */
@@ -151,7 +151,7 @@ func reapChildren(config Config) {
 	for {
 		var sig = <-notifications
 		if config.Debug {
-			fmt.Printf(" - Received signal %+v\n", sig)
+			slog.Info("received signal", "signal", sig)
 		}
 		for {
 			var wstatus syscall.WaitStatus
@@ -170,8 +170,7 @@ func reapChildren(config Config) {
 			}
 
 			if config.Debug {
-				fmt.Printf(" - Grim reaper cleanup: pid=%d, wstatus=%+v\n",
-					pid, wstatus)
+				slog.Info("reaped child", "pid", pid, "wait_status", wstatus)
 			}
 
 			if informer != nil {
@@ -233,18 +232,18 @@ func Start(config Config) {
 		 *  descendant process will get "reparented" to us.
 		 *  And we then do the reaping when those processes die.
 		 */
-		fmt.Println(" - Enabling child subreaper ...")
+		slog.Info("enabling child subreaper")
 		err := EnableChildSubReaper()
 		if err != nil {
 			// Log the error and continue ...
-			fmt.Printf(" - Error enabling subreaper: %v\n", err)
+			slog.Error("failed to enable child subreaper", "error", err)
 		}
 	}
 
 	if !config.DisablePid1Check {
 		mypid := os.Getpid()
 		if 1 != mypid {
-			fmt.Println(" - Grim reaper disabled, pid not 1")
+			slog.Info("grim reaper disabled: pid is not 1", "pid", mypid)
 			return
 		}
 	}
@@ -269,14 +268,14 @@ func RunForked(config Config) {
 
 	if _, hasReaper := os.LookupEnv(indicator); hasReaper {
 		if config.Debug {
-			fmt.Printf(" - forked [reaper] child, pid = %d\n", os.Getpid())
+			slog.Info("forked reaper child process", "pid", os.Getpid())
 		}
 		return
 	}
 
 	if config.Debug {
-		fmt.Printf(" - Reaper parent pid = %d\n", os.Getpid())
-		fmt.Println(" - Starting reaper ...")
+		slog.Info("reaper parent process", "pid", os.Getpid())
+		slog.Info("starting reaper")
 	}
 
 	go Start(config)
@@ -288,7 +287,7 @@ func RunForked(config Config) {
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		fmt.Printf(" - Reaper error getting cwd = %v, using /tmp\n", err)
+		slog.Error("failed to get cwd, using fallback", "error", err, "fallback_dir", "/tmp")
 		pwd = "/tmp"
 	}
 
@@ -309,7 +308,7 @@ func RunForked(config Config) {
 	pid, _ := syscall.ForkExec(args[0], args, pattrs)
 
 	if config.Debug {
-		fmt.Printf(" - reaper forked child pid = %d\n", pid)
+		slog.Info("reaper forked child", "pid", pid)
 	}
 
 	_, err = syscall.Wait4(pid, &wstatus, 0, nil)
@@ -327,7 +326,7 @@ func RunForked(config Config) {
 func WithReaper(config Config, ep EntryPoint) {
 	if ep == nil {
 		err := fmt.Errorf("entry point parameter is required")
-		fmt.Printf(" - Error: %v\n", err)
+		slog.Error("entry point parameter is required", "error", err)
 		panic(err)
 	}
 
@@ -339,7 +338,7 @@ func WithReaper(config Config, ep EntryPoint) {
 	defer func() {
 		if r := recover(); r != nil {
 			//  Entrypoint spillage, clean it up.
-			fmt.Printf(" - Error: entry point failed: %v\n", r)
+			slog.Error("entry point failed", "panic", r)
 
 			//  EX_IOERR for lack of a better exit code.
 			os.Exit(74)
@@ -349,7 +348,7 @@ func WithReaper(config Config, ep EntryPoint) {
 	if !config.DisableCallerCheck {
 		// Caller check is enabled, ensure caller is [go]main ...
 		if err := callerCheck(); err != nil {
-			fmt.Printf(" - Error: caller check: %v\n", err)
+			slog.Error("caller check failed", "error", err)
 			os.Exit(ep(err))
 		}
 	}
