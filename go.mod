@@ -1,5 +1,5 @@
 module github.com/ramr/go-reaper
 
-go 1.14
+go 1.21.0
 
 require golang.org/x/sys v0.26.0
